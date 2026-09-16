@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0284c7; /* Sky blue */
+  --color-secondary: #f97316; /* Orange */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Mega menu hover styles */
+.group:hover .mega-menu {
+  display: block;
+}
+
+/* Utilities for animations */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+@layer utilities {
+  .blog-content {
+    @apply text-gray-800 text-lg leading-relaxed;
+  }
+  .blog-content h1 { @apply text-4xl font-bold text-primary mb-4 mt-8; }
+  .blog-content h2 { @apply text-3xl font-bold text-primary mb-4 mt-8; }
+  .blog-content h3 { @apply text-2xl font-bold text-primary mb-3 mt-6; }
+  .blog-content p { @apply mb-4; }
+  .blog-content ul { @apply list-disc pl-6 mb-4 space-y-2; }
+  .blog-content ol { @apply list-decimal pl-6 mb-4 space-y-2; }
+  .blog-content img, .prose img { @apply rounded-2xl my-6 shadow-md; max-width: 100%; height: auto; display: inline-block; }
+  .blog-content figure { @apply my-8 flex flex-col items-center justify-center text-center; }
+  .blog-content figure img { @apply my-2; }
+  .blog-content figcaption { @apply mt-2 text-sm text-gray-500 italic; }
+  .blog-content a { @apply text-secondary hover:text-primary underline font-medium transition-colors; }
+  .blog-content blockquote { @apply border-l-4 border-secondary pl-4 italic text-gray-600 bg-gray-50 py-3 pr-4 rounded-r-lg my-8; }
+
+  /* Quill editor alignment classes for frontend rendering */
+  .ql-align-center { text-align: center; }
+  .ql-align-right { text-align: right; }
+  .ql-align-justify { text-align: justify; }
+
+  /* Fix image alignment inside Quill EDITOR (admin) */
+  .ql-editor img {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+  }
+  .ql-editor p { min-height: 1.5em; }
+
+  /* Fix image alignment on FRONTEND render */
+  .blog-content .ql-align-center img,
+  .prose .ql-align-center img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .blog-content .ql-align-right img,
+  .prose .ql-align-right img {
+    display: block;
+    margin-left: auto;
+    margin-right: 0;
+  }
+  .blog-content .ql-align-left img,
+  .prose .ql-align-left img {
+    display: block;
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .blog-content, .prose {
+    white-space: normal !important;
+  }
+  .blog-content *:not(.not-prose, .not-prose *), 
+  .prose *:not(.not-prose, .not-prose *) {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Fix tables from WYSIWYG editors breaking mobile layout */
+  .blog-content table, .prose table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse;
+  }
+  .blog-content td, .prose td, .blog-content th, .prose th {
+    white-space: normal !important;
+    overflow: hidden;
+  }
+}
