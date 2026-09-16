@@ -16,8 +16,8 @@ const DEFAULT_FALLBACK = 'https://images.unsplash.com/photo-1616046229478-9901c5
 export default function SafeImage({
   src,
   fallbackSrc = DEFAULT_FALLBACK,
-  widthParam = 500,
-  qualityParam = 75,
+  widthParam = 800,
+  qualityParam = 80,
   alt,
   className = '',
   ...props

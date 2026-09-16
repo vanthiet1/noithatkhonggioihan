@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createProduct, uploadEditorImage } from '@/app/actions/admin';
 import dynamic from 'next/dynamic';
 import TagsInput from '@/components/TagsInput';
+import PublishSchedule from '@/components/PublishSchedule';
 import 'react-quill-new/dist/quill.snow.css';
 import { formatHTML } from '@/utils/formatHtml';
 
@@ -252,6 +253,10 @@ export default function CreateProductForm({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="pt-6 mt-6 border-t border-gray-100">
+        <PublishSchedule />
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">

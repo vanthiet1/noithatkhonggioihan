@@ -12,6 +12,8 @@ export const revalidate = 3600;
 
 export default async function Home() {
   const supabase = getPublicClient();
+  const now = new Date().toISOString();
+
   const [
     { data: featuredProjects },
     { data: siteSettings },
@@ -20,14 +22,19 @@ export default async function Home() {
     supabase
       .from('featured_projects')
       .select('*')
-      .order('created_at', { ascending: true }),
+      .eq('status', 'published')
+      .lte('published_at', now)
+      .order('published_at', { ascending: false }) // Changed to sort by published_at
+      .limit(6), // Add a limit if needed
     supabase
       .from('site_settings')
       .select('key, value'),
     supabase
       .from('news')
-      .select('id, title, link, excerpt, image_url, created_at')
-      .order('created_at', { ascending: false })
+      .select('id, title, link, excerpt, image_url, created_at, published_at')
+      .eq('status', 'published')
+      .lte('published_at', now)
+      .order('published_at', { ascending: false }) // Sort by published_at
       .limit(3)
   ]);
 
@@ -158,14 +165,18 @@ export default async function Home() {
                </p>
                
                <div className="flex flex-wrap gap-x-6 gap-y-3 mb-8">
-                 {[
-                   'Cửa Lưới Chống muỗi', 'Tấm Ốp Tường Nano', 'Giấy Dán Tường', 'Rèm Cửa Cao Cấp', 'Tranh Dán Tường 3D'
-                 ].map((item, i) => (
-                   <span key={i} className="flex items-center text-sm font-bold text-primary">
-                     <CheckCircle2 className="w-4 h-4 mr-1.5 text-primary" /> {item}
-                   </span>
-                 ))}
-               </div>
+                  {[
+                    { name: 'Cửa Lưới Chống muỗi', href: 'https://www.noithatkhonggioihan.com/tin-tuc/cua-luoi-chong-muoi-tai-da-nang-giai-phap-giu-nha-thong-thoang-han-che-con-trung' },
+                    { name: 'Tấm Ốp Tường Nano', href: 'https://www.noithatkhonggioihan.com/tin-tuc/tam-op-tuong-nano-tai-da-nang-giai-phap-cai-tao-khong-gian-dep-ben' },
+                    { name: 'Giấy Dán Tường', href: 'https://www.noithatkhonggioihan.com/tin-tuc/giay-dan-tuong-tai-da-nang-giai-phap-trang-tri-tuong-nhanh-dep' },
+                    { name: 'Rèm Cửa Cao Cấp', href: 'https://www.noithatkhonggioihan.com/tin-tuc/rem-cua-da-nang-mau-dep-cho-nha-o-van-phong-va-cua-hang' },
+                    { name: 'Tranh Dán Tường 3D', href: 'https://www.noithatkhonggioihan.com/tin-tuc/tranh-dan-tuong-tai-da-nang-thiet-ke-theo-kich-thuoc-khong-gian' }
+                  ].map((item, i) => (
+                    <Link key={i} href={item.href} className="flex items-center text-sm font-bold text-primary hover:underline transition-all">
+                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-primary" /> {item.name}
+                    </Link>
+                  ))}
+                </div>
 
                <div className="flex flex-wrap gap-4">
                  <a href="tel:+84766444789" className="bg-primary text-white px-6 py-3 rounded-lg font-bold flex items-center hover:bg-sky-800 transition shadow-md">
@@ -417,8 +428,8 @@ export default async function Home() {
              </h3>
            </div>
 
-           {/* Thêm flex overflow-x-auto cho mobile để có thể vuốt ngang, trên desktop giữ nguyên grid */}
-            <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+           {/* Grid layout: 1 cột mobile, 3 cột desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                {latestNews && latestNews.length > 0 ? latestNews.map((article) => {
                  const localSlug = article.link ? article.link.split('/').filter(Boolean).pop() : '';
                  const href = localSlug ? `/tin-tuc/${localSlug}` : '/tin-tuc';
@@ -437,15 +448,15 @@ export default async function Home() {
                  const imageUrl = article.image_url || getFallbackImage(article.title);
 
                  return (
-                   <div key={article.id} className="min-w-[85%] md:min-w-0 shrink-0 snap-center bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
-                      <Link href={href} className="relative h-48 w-full block overflow-hidden bg-gray-100">
-                         <SafeImage src={imageUrl} alt={article.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover hover:scale-105 transition-transform duration-500" widthParam={600} />
+                   <div key={article.id} className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
+                      <Link href={href} className="relative aspect-[8/5] w-full block overflow-hidden bg-white">
+                         <SafeImage src={imageUrl} alt={article.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover object-center group-hover:scale-105 transition-transform duration-500" />
                       </Link>
                       <div className="p-6 flex flex-col flex-grow">
                         <Link href={href}>
                           <h3 className="font-bold text-gray-900 text-lg mb-2 hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem]">{article.title}</h3>
                         </Link>
-                        <p className="text-xs text-gray-400 font-medium mb-4">{new Date(article.created_at).toLocaleDateString('vi-VN')}</p>
+                        <p className="text-xs text-gray-400 font-medium mb-4">{new Date(article.published_at || article.created_at).toLocaleDateString('vi-VN')}</p>
                         <div className="w-8 h-0.5 bg-sky-300 mb-4"></div>
                         <p className="text-sm text-gray-600 line-clamp-2">{article.excerpt}</p>
                       </div>

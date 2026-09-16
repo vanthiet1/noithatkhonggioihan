@@ -70,7 +70,9 @@ export default async function ServicesPage() {
         image_url,
         description
       )
-    `);
+    `)
+    .eq('status', 'published')
+    .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`);
 
   if (error) {
     console.error('Error fetching categories:', error);

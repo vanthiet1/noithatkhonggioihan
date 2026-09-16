@@ -13,10 +13,13 @@ export const revalidate = 3600;
 
 const getProduct = cache(async (slug: string) => {
   const supabase = getPublicClient();
+  const now = new Date().toISOString();
   const { data } = await supabase
     .from('products')
     .select('*, categories(name, slug), sub_categories(name, slug, category_id)')
     .eq('slug', slug)
+    .eq('status', 'published')
+    .or(`published_at.is.null,published_at.lte.${now}`)
     .single();
   return data;
 });
@@ -68,6 +71,8 @@ export default async function ProductDetailPage({
           .from('products')
           .select('id, name, slug, image_url, original_price, sale_price, categories(name)')
           .eq('sub_category_id', product.sub_category_id)
+          .eq('status', 'published')
+          .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
           .neq('id', product.id)
           .limit(4)
       : product.category_id
@@ -75,6 +80,8 @@ export default async function ProductDetailPage({
           .from('products')
           .select('id, name, slug, image_url, original_price, sale_price, categories(name)')
           .eq('category_id', product.category_id)
+          .eq('status', 'published')
+          .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
           .neq('id', product.id)
           .limit(4)
       : Promise.resolve({ data: [] }),

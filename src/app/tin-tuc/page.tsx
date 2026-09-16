@@ -13,14 +13,20 @@ export const revalidate = 3600;
 export default async function NewsPage() {
   const supabase = getPublicClient();
 
+  const now = new Date().toISOString();
+
   const [{ data: news }, { data: sidebarProducts }] = await Promise.all([
     supabase
       .from('news')
-      .select('id, title, link, excerpt, image_url, created_at')
-      .order('created_at', { ascending: false }),
+      .select('id, title, link, excerpt, image_url, created_at, published_at')
+      .eq('status', 'published')
+      .lte('published_at', now)
+      .order('published_at', { ascending: false }),
     supabase
       .from('products')
       .select('id, name, slug, image_url, original_price, sale_price')
+      .eq('status', 'published')
+      .lte('published_at', now)
       .limit(4)
   ]);
 
@@ -62,8 +68,8 @@ export default async function NewsPage() {
              <article key={item.id} className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-xl transition border border-gray-100 flex flex-col group">
                 {/* Thumb nếu có */}
                 {item.image_url && (
-                  <Link href={getLocalSlug(item.link)} className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden block rounded-t-2xl">
-                     <SafeImage src={item.image_url} alt={item.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" widthParam={600} />
+                  <Link href={getLocalSlug(item.link)} className="relative aspect-[16/9] -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden block rounded-t-2xl bg-white">
+                     <SafeImage src={item.image_url} alt={item.title} fill className="object-contain p-2 group-hover:scale-110 transition-transform duration-500" />
                   </Link>
                 )}
                 
@@ -75,7 +81,7 @@ export default async function NewsPage() {
                 
                 <div className="flex items-center justify-between border-t border-gray-200 pt-4 mt-auto">
                    <span className="text-sm font-medium text-gray-500">
-                     {new Date(item.created_at).toLocaleDateString('vi-VN')}
+                     {new Date(item.published_at || item.created_at).toLocaleDateString('vi-VN')}
                    </span>
                    <Link href={getLocalSlug(item.link)} className="inline-flex items-center text-sm font-bold text-gray-900 hover:text-primary transition group/link">
                       Đọc thêm <ArrowRight className="w-4 h-4 ml-1 group-hover/link:translate-x-1 transition-transform" />

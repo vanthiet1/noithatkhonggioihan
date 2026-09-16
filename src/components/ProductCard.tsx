@@ -39,16 +39,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
       )}
 
-      <div className="relative h-64 w-full overflow-hidden bg-gray-100">
-        <Link href={`/danh-muc-san-pham/${product.slug}`} className="block w-full h-full">
-          <SafeImage 
+      <div className="relative w-[calc(100%+10px)] -mx-[5px] overflow-hidden bg-gray-50 flex items-center justify-center">
+        <Link href={`/danh-muc-san-pham/${product.slug}`} className="block w-full">
+          <img 
             src={product.image_url} 
             alt={product.name} 
-            fill 
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            className="object-cover group-hover:scale-110 transition-transform duration-500" 
-            widthParam={500}
-            priority={priority}
+            className="w-full h-auto object-contain group-hover:scale-110 transition-transform duration-500" 
           />
         </Link>
       </div>

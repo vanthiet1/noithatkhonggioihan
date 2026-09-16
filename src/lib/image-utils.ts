@@ -32,7 +32,7 @@ export function getOptimizedImageUrl(
   if (supabasePattern.test(url)) {
     const cleanUrl = url.split('?')[0];
     return cleanUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
-      `?width=${width}&quality=${quality}`;
+      `?width=${width}&quality=${quality}&resize=contain`;
   }
 
   return url;

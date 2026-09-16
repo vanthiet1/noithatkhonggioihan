@@ -75,19 +75,24 @@ export default function Navbar() {
   useEffect(() => {
     let isMounted = true;
     const fetchCategories = async () => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name, slug, sub_categories(id, name, slug)')
+        .select('id, name, slug, sub_categories(id, name, slug, status, published_at)')
+        .eq('status', 'published')
+        .or(`published_at.is.null,published_at.lte.${now}`)
         .order('name');
         
       if (data && !error && isMounted) {
         const formatted = data.map((cat: any) => ({
           title: cat.name,
           href: `/danh-muc/${cat.slug}`,
-          subMenuItems: (cat.sub_categories || []).map((sub: any) => ({
-            title: sub.name,
-            href: `/danh-muc/${sub.slug}`
-          }))
+          subMenuItems: (cat.sub_categories || [])
+            .filter((sub: any) => sub.status === 'published' && (!sub.published_at || new Date(sub.published_at) <= new Date()))
+            .map((sub: any) => ({
+              title: sub.name,
+              href: `/danh-muc/${sub.slug}`
+            }))
         }));
         setNavCategories(formatted);
       }

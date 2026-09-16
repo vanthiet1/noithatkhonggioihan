@@ -12,10 +12,13 @@ export const revalidate = 3600;
 
 const getNewsItem = cache(async (slug: string) => {
   const supabase = getPublicClient();
+  const now = new Date().toISOString();
   const { data: newsItems } = await supabase
     .from('news')
     .select('*')
     .ilike('link', `%${slug}%`)
+    .eq('status', 'published')
+    .lte('published_at', now)
     .limit(1);
   return newsItems?.[0] || null;
 });
@@ -72,11 +75,14 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
 
   const supabase = getPublicClient();
 
+  const now = new Date().toISOString();
   // Chạy song song sản phẩm sidebar và danh mục
   const [{ data: sidebarProducts }, { data: categories }] = await Promise.all([
     supabase
       .from('products')
       .select('id, name, slug, image_url')
+      .eq('status', 'published')
+      .lte('published_at', now)
       .order('created_at', { ascending: false })
       .limit(5),
     supabase
@@ -111,7 +117,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
               </h1>
               
               <div className="flex items-center text-xs text-gray-400 uppercase tracking-wider font-semibold mb-8 pb-8 border-b border-gray-100">
-                POSTED ON {new Date(newsItem.created_at).toLocaleDateString('vi-VN')} BY ADMIN
+                POSTED ON {new Date(newsItem.published_at || newsItem.created_at).toLocaleDateString('vi-VN')} BY ADMIN
               </div>
 
               {/* FEATURED IMAGE REMOVED PER USER REQUEST */}

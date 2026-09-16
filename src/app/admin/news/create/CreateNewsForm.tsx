@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createNews, uploadEditorImage } from '@/app/actions/admin';
 import dynamic from 'next/dynamic';
 import TagsInput from '@/components/TagsInput';
+import PublishSchedule from '@/components/PublishSchedule';
 import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false, loading: () => <p className="text-gray-400 py-4">Đang tải trình soạn thảo...</p> }) as any;
@@ -203,6 +204,10 @@ export default function CreateNewsForm() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="pt-6 mt-6 border-t border-gray-100">
+        <PublishSchedule />
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">

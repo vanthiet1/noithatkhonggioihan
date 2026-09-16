@@ -7,10 +7,12 @@ interface DeleteButtonProps {
   id: string;
   onDelete: (id: string) => Promise<any>;
   confirmMessage?: string;
+  disabled?: boolean;
+  title?: string;
   children?: React.ReactNode;
 }
 
-export default function DeleteButton({ id, onDelete, confirmMessage = 'Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác.', children }: DeleteButtonProps) {
+export default function DeleteButton({ id, onDelete, confirmMessage = 'Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác.', disabled, title, children }: DeleteButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -31,7 +33,13 @@ export default function DeleteButton({ id, onDelete, confirmMessage = 'Bạn có
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="text-xs px-3 py-1.5 rounded-lg font-medium bg-red-50 text-red-600 hover:bg-red-100 transition"
+        disabled={disabled}
+        title={title}
+        className={`flex items-center text-xs px-3 py-1.5 rounded-lg font-medium transition ${
+          disabled 
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+            : 'bg-red-50 text-red-600 hover:bg-red-100'
+        }`}
       >
         {children || 'Xóa'}
       </button>

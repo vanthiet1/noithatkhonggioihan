@@ -5,6 +5,7 @@ import { Edit, X } from 'lucide-react';
 import { updateProduct, uploadEditorImage } from '@/app/actions/admin';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import PublishSchedule from '@/components/PublishSchedule';
 import 'react-quill-new/dist/quill.snow.css';
 import { formatHTML } from '@/utils/formatHtml';
 
@@ -257,6 +258,13 @@ export default function EditProductButton({ product, categories, subCategories }
                     />
                   )}
                 </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100">
+                <PublishSchedule 
+                  initialStatus={product.status || 'published'} 
+                  initialPublishedAt={product.published_at || null} 
+                />
               </div>
 
               <div className="flex justify-end pt-4 border-t border-gray-100 gap-3">

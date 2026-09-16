@@ -1,6 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { Layers, Plus, Trash2 } from 'lucide-react';
-import { deleteSubCategory, createSubCategory } from '@/app/actions/admin';
+import { deleteSubCategory } from '@/app/actions/admin';
+import DeleteButton from '@/components/DeleteButton';
+import CreateSubCategoryForm from '@/components/CreateSubCategoryForm';
+import StatusSelect from '@/components/StatusSelect';
 
 export default async function AdminSubCategoriesPage() {
   const supabase = await createClient();
@@ -20,44 +23,7 @@ export default async function AdminSubCategoriesPage() {
       {/* Add form */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-700 mb-4 flex items-center gap-2"><Plus className="w-4 h-4" /> Thêm danh mục con mới</h2>
-        <form action={async (formData) => { 'use server'; await createSubCategory(formData); }} className="flex flex-col gap-4">
-          <div className="flex gap-3">
-            <select
-              name="category_id"
-              required
-              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 min-w-[200px] text-gray-900"
-            >
-              <option value="">-- Chọn danh mục cha --</option>
-              {categories?.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="Tên danh mục con..."
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 text-gray-900"
-            />
-          </div>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              name="description"
-              placeholder="Mô tả ngắn gọn..."
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 text-gray-900"
-            />
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 text-gray-900"
-            />
-            <button type="submit" className="bg-primary text-white px-8 py-2.5 rounded-xl font-medium text-sm hover:bg-sky-800 transition">
-              Thêm
-            </button>
-          </div>
-        </form>
+        <CreateSubCategoryForm categories={categories || []} />
       </div>
 
       {/* List - grouped by category */}
@@ -69,6 +35,7 @@ export default async function AdminSubCategoriesPage() {
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Ảnh</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Danh mục cha</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Slug</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Hành động</th>
             </tr>
           </thead>
@@ -94,23 +61,29 @@ export default async function AdminSubCategoriesPage() {
                 </td>
                 <td className="px-6 py-4 text-gray-400 text-sm font-mono">{sub.slug}</td>
                 <td className="px-6 py-4">
-                  <form action={async () => {
-                    'use server';
-                    await deleteSubCategory(sub.id);
-                  }}>
-                    <button 
-                      type="submit" 
+                  {sub.status === 'draft' ? (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium whitespace-nowrap">Bản nháp</span>
+                  ) : sub.published_at && new Date(sub.published_at) > new Date() ? (
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-medium flex items-center w-fit whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                      Hẹn giờ
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-xs font-medium whitespace-nowrap">Công khai</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <StatusSelect id={sub.id} table="sub_categories" currentStatus={sub.status || 'published'} />
+                    <DeleteButton 
+                      id={sub.id} 
+                      onDelete={deleteSubCategory}
                       disabled={((sub.products as any)?.[0]?.count ?? 0) > 0}
                       title={((sub.products as any)?.[0]?.count ?? 0) > 0 ? "Không thể xóa vì đang chứa sản phẩm" : ""}
-                      className={`flex items-center text-xs px-3 py-1.5 rounded-lg font-medium transition ${
-                        ((sub.products as any)?.[0]?.count ?? 0) > 0 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-red-50 text-red-600 hover:bg-red-100'
-                      }`}
                     >
                       <Trash2 className="w-3 h-3 mr-1" /> Xóa
-                    </button>
-                  </form>
+                    </DeleteButton>
+                  </div>
                 </td>
               </tr>
             ))}

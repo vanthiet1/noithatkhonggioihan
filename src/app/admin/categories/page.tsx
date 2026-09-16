@@ -3,6 +3,8 @@ import { FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { deleteCategory, createCategory } from '@/app/actions/admin';
 import { revalidatePath } from 'next/cache';
 import EditCategoryButton from '@/components/EditCategoryButton';
+import PublishSchedule from '@/components/PublishSchedule';
+import StatusSelect from '@/components/StatusSelect';
 
 export default async function AdminCategoriesPage() {
   const supabase = await createClient();
@@ -21,17 +23,24 @@ export default async function AdminCategoriesPage() {
       {/* Add form */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-semibold text-gray-700 mb-4 flex items-center gap-2"><Plus className="w-4 h-4" /> Thêm danh mục mới</h2>
-        <form action={async (formData) => { 'use server'; await createCategory(formData); }} className="flex gap-3">
-          <input
-            type="text"
-            name="name"
-            required
-            placeholder="Tên danh mục..."
-            className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 text-gray-900"
-          />
-          <button type="submit" className="bg-primary text-white px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-sky-800 transition">
-            Thêm
-          </button>
+        <form action={async (formData) => { 'use server'; await createCategory(formData); }} className="flex flex-col gap-4">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              name="name"
+              required
+              placeholder="Tên danh mục..."
+              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm bg-gray-50 text-gray-900"
+            />
+          </div>
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <PublishSchedule />
+            </div>
+            <button type="submit" className="bg-primary text-white px-8 py-2.5 rounded-xl font-medium text-sm hover:bg-sky-800 transition h-fit mb-6">
+              Thêm
+            </button>
+          </div>
         </form>
       </div>
 
@@ -43,6 +52,7 @@ export default async function AdminCategoriesPage() {
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tên danh mục</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Slug</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Danh mục con</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Hành động</th>
             </tr>
           </thead>
@@ -59,7 +69,20 @@ export default async function AdminCategoriesPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
+                  {cat.status === 'draft' ? (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium whitespace-nowrap">Bản nháp</span>
+                  ) : cat.published_at && new Date(cat.published_at) > new Date() ? (
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-medium flex items-center w-fit whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                      Hẹn giờ
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-xs font-medium whitespace-nowrap">Công khai</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
+                    <StatusSelect id={cat.id} table="categories" currentStatus={cat.status || 'published'} />
                     <EditCategoryButton category={cat} />
                     <form action={async () => {
                       'use server';

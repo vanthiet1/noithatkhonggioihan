@@ -50,15 +50,11 @@ export default function ProductGallery({ mainImage, galleryImages, productName }
   return (
     <div className="flex flex-col gap-4">
       {/* Main Large Image */}
-      <div className="rounded-2xl overflow-hidden shadow-lg relative h-[400px] md:h-[500px] bg-gray-100 border border-gray-200">
-        <SafeImage 
-          src={activeImg} 
-          alt={productName} 
-          fill 
-          className="object-cover" 
-          sizes="(max-width: 768px) 100vw, 50vw"
-          widthParam={800}
-          priority
+      <div className="rounded-2xl overflow-hidden shadow-lg relative bg-gray-100 border border-gray-200 flex justify-center items-center">
+        <img
+          src={activeImg}
+          alt={productName}
+          className="w-full h-auto object-contain max-h-[70vh] rounded-2xl"
         />
       </div>
 
@@ -69,14 +65,13 @@ export default function ProductGallery({ mainImage, galleryImages, productName }
             <button
               key={idx}
               onClick={() => setActiveImg(img)}
-              className={`relative h-20 w-20 md:h-24 md:w-24 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all snap-start ${
-                activeImg === img ? 'border-primary shadow-md opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
-              }`}
+              className={`relative h-20 w-20 md:h-24 md:w-24 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all snap-start ${activeImg === img ? 'border-primary shadow-md opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
             >
-              <SafeImage 
-                src={img} 
-                alt={`${productName} thumbnail ${idx + 1}`} 
-                fill 
+              <SafeImage
+                src={img}
+                alt={`${productName} thumbnail ${idx + 1}`}
+                fill
                 className="object-cover"
                 sizes="96px"
                 widthParam={160}

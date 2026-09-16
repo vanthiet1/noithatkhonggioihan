@@ -58,10 +58,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const supabase = getPublicClient();
   
   // Try to find in categories first
-  let { data: cat } = await supabase.from('categories').select('name, description').eq('slug', slug).single();
+  let { data: cat } = await supabase
+    .from('categories')
+    .select('name, description')
+    .eq('status', 'published')
+    .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
+    .eq('slug', slug)
+    .single();
   
   if (!cat) {
-    const { data: subCat } = await supabase.from('sub_categories').select('name, description').eq('slug', slug).single();
+    const { data: subCat } = await supabase
+      .from('sub_categories')
+      .select('name, description')
+      .eq('status', 'published')
+      .lte('published_at', new Date().toISOString())
+      .eq('slug', slug)
+      .single();
     if (subCat) cat = subCat;
   }
 
@@ -249,6 +261,8 @@ export default async function CategoryPage({
   let { data: categoryList } = await supabase
     .from('categories')
     .select('id, name, slug')
+    .eq('status', 'published')
+    .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
     .or(`slug.eq.${slug},slug.eq.${slug}-da-nang`);
     
   let category = categoryList?.[0];
@@ -262,6 +276,8 @@ export default async function CategoryPage({
     const { data: subCategoryList } = await supabase
       .from('sub_categories')
       .select('id, name, slug, category_id, categories(name, slug)')
+      .eq('status', 'published')
+      .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
       .or(`slug.eq.${slug},slug.eq.${slug}-da-nang`);
       
     const subCategory = subCategoryList?.[0];
@@ -279,13 +295,20 @@ export default async function CategoryPage({
 
 
   // Fetch products
+  const now = new Date().toISOString();
   let products: any[] = [];
   if (categoryId) {
-    const query = supabase.from('products').select('*');
+    const query = supabase.from('products').select('*').eq('status', 'published').or(`published_at.is.null,published_at.lte.${now}`);
     if (isSubCategory) {
       query.eq('sub_category_id', categoryId);
     } else {
-      query.eq('category_id', categoryId);
+      const { data: subCats } = await supabase.from('sub_categories').select('id').eq('category_id', categoryId);
+      const subCatIds = subCats?.map(s => s.id) || [];
+      if (subCatIds.length > 0) {
+        query.or(`category_id.eq.${categoryId},sub_category_id.in.(${subCatIds.join(',')})`);
+      } else {
+        query.eq('category_id', categoryId);
+      }
     }
     const { data } = await query;
     if (data) {
@@ -1082,12 +1105,12 @@ export default async function CategoryPage({
                 </div>
               </div>
               
-              <div className="flex-1 w-full relative">
-                <div className="aspect-[4/3] overflow-hidden shadow-2xl relative bg-gray-100">
+              <div className="flex-1 w-full flex justify-center">
+                <div className="w-full overflow-hidden shadow-2xl bg-gray-100 rounded-xl md:rounded-2xl">
                   {products[0]?.image_url ? (
-                     <Image src={products[0].image_url} alt={categoryName} fill className="object-cover" />
+                     <img src={products[0].image_url} alt={categoryName} className="w-full h-auto max-h-[70vh] object-contain rounded-xl md:rounded-2xl" />
                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-gray-400">Không có hình ảnh</div>
+                     <div className="w-full aspect-[4/3] flex items-center justify-center text-gray-400">Không có hình ảnh</div>
                   )}
                 </div>
               </div>
@@ -1139,7 +1162,7 @@ export default async function CategoryPage({
                   const subProduct = products.find(p => p.sub_category_id === sub.id);
                   return (
                     <Link key={sub.id} href={`/danh-muc/${sub.slug}`} className="group block bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition text-center">
-                      <div className="aspect-[4/5] overflow-hidden mb-3 relative rounded-lg bg-gray-50">
+                      <div className="aspect-[4/5] overflow-hidden mb-3 relative rounded-lg bg-white">
                         {subProduct?.image_url ? (
                           <Image src={subProduct.image_url} alt={sub.name} fill className="object-cover group-hover:scale-110 transition duration-500" />
                         ) : (
@@ -1166,8 +1189,8 @@ export default async function CategoryPage({
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {paginatedProducts.map((product) => (
                   <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center flex flex-col group">
-                    <div className="aspect-square relative mb-4 overflow-hidden rounded-lg">
-                      <Image src={product.image_url || ''} alt={product.name} fill className="object-cover group-hover:scale-105 transition duration-500" />
+                    <div className="w-[calc(100%+10px)] -mx-[5px] relative mb-4 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
+                      <img src={product.image_url || ''} alt={product.name} className="w-full h-auto object-contain group-hover:scale-105 transition duration-500" />
                     </div>
                     <h3 className="font-bold text-[13px] uppercase mb-2 text-gray-800">{product.name}</h3>
                     <p className="text-[11px] text-gray-500 mb-4 flex-grow line-clamp-2">
@@ -1177,6 +1200,23 @@ export default async function CategoryPage({
                       XEM CHI TIẾT
                     </Link>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center">Chưa có sản phẩm nào trong danh mục này.</p>
+            )}
+            {/* The pagination here was moved below to the second products block, or we can keep it here and below, but let's just keep it once at the bottom */}
+          </div>
+        </section>
+
+        {/* 2B. ACTUAL PRODUCTS LIST WITH PRICING UI */}
+        <section className="py-12 bg-white border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-gray-900 uppercase mb-8">SẢN PHẨM {categoryName}</h2>
+            {paginatedProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {paginatedProducts.map((product, idx) => (
+                  <ProductCard key={product.id} product={product} priority={idx < 4} />
                 ))}
               </div>
             ) : (
@@ -1422,12 +1462,12 @@ export default async function CategoryPage({
                 </a>
               </div>
             </div>
-            <div className="flex-1 w-full relative">
-              <div className="aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl md:shadow-2xl relative bg-slate-100 border border-gray-100">
+            <div className="flex-1 w-full flex justify-center relative">
+              <div className="w-full rounded-3xl overflow-hidden shadow-xl md:shadow-2xl bg-slate-100 border border-gray-100">
                 {parentContent.heroImage || products[0]?.image_url ? (
-                   <Image src={parentContent.heroImage || products[0].image_url} alt={categoryName} fill className="object-cover" />
+                   <img src={parentContent.heroImage || products[0].image_url} alt={categoryName} className="w-full h-auto max-h-[70vh] object-contain rounded-3xl" />
                 ) : (
-                   <Image src="https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=80" alt={categoryName} fill className="object-cover" />
+                   <img src="https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=80" alt={categoryName} className="w-full h-auto max-h-[70vh] object-contain rounded-3xl" />
                 )}
               </div>
               <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl hidden md:block">
@@ -1462,13 +1502,19 @@ export default async function CategoryPage({
         <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-extrabold text-primary text-center mb-12 uppercase">CÁC LOẠI {categoryName}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {subCategoriesList.map((sub) => {
                 return (
                   <Link key={sub.id} href={`/danh-muc/${sub.slug}`} className="group block">
-                    <div className="bg-slate-100 rounded-2xl aspect-[4/5] overflow-hidden mb-4 relative shadow-sm group-hover:shadow-md transition">
+                    <div className="bg-slate-100 rounded-2xl aspect-[2/1] overflow-hidden mb-4 relative shadow-sm group-hover:shadow-md transition">
                       {sub?.image_url ? (
-                        <Image src={sub.image_url} alt={sub.name} fill className="object-cover group-hover:scale-110 transition duration-500" />
+                        <Image
+                          src={sub.image_url}
+                          alt={sub.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                          className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                            <Box className="w-8 h-8 text-gray-400" />

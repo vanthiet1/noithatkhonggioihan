@@ -13,6 +13,8 @@ export default async function AdminDashboard() {
     { count: categoryCount },
     { count: subCategoryCount },
     { data: recentContacts },
+    { count: scheduledNewsCount },
+    { count: scheduledProductCount },
   ] = await Promise.all([
     supabase.from('products').select('*', { count: 'exact', head: true }),
     supabase.from('news').select('*', { count: 'exact', head: true }),
@@ -21,15 +23,19 @@ export default async function AdminDashboard() {
     supabase.from('categories').select('*', { count: 'exact', head: true }),
     supabase.from('sub_categories').select('*', { count: 'exact', head: true }),
     supabase.from('contacts').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
+    supabase.from('news').select('*', { count: 'exact', head: true }).eq('status', 'published').gt('published_at', new Date().toISOString()),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'published').gt('published_at', new Date().toISOString()),
   ]);
 
   const stats = [
     { title: 'Tổng sản phẩm', value: productCount ?? 0, icon: Package, color: 'text-sky-500', bg: 'bg-sky-50', href: '/admin/products' },
     { title: 'Tin tức', value: newsCount ?? 0, icon: FileText, color: 'text-sky-500', bg: 'bg-sky-50', href: '/admin/news' },
+    { title: 'Bài hẹn đăng', value: scheduledNewsCount ?? 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', href: '/admin/news' },
+    { title: 'Sản phẩm hẹn', value: scheduledProductCount ?? 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', href: '/admin/products' },
     { title: 'Liên hệ mới', value: pendingCount ?? 0, icon: Users, color: 'text-orange-500', bg: 'bg-orange-50', href: '/admin/contacts' },
+    { title: 'Tổng liên hệ', value: contactCount ?? 0, icon: Users, color: 'text-gray-500', bg: 'bg-gray-50', href: '/admin/contacts' },
     { title: 'Danh mục', value: categoryCount ?? 0, icon: FolderOpen, color: 'text-purple-500', bg: 'bg-purple-50', href: '/admin/categories' },
     { title: 'Danh mục con', value: subCategoryCount ?? 0, icon: Layers, color: 'text-pink-500', bg: 'bg-pink-50', href: '/admin/sub-categories' },
-    { title: 'Tổng liên hệ', value: contactCount ?? 0, icon: Clock, color: 'text-gray-500', bg: 'bg-gray-50', href: '/admin/contacts' },
   ];
 
   return (

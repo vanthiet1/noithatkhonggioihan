@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { updateFeaturedProject } from '@/app/actions/admin';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
+import PublishSchedule from '@/components/PublishSchedule';
 
 export default function EditFeaturedProjectForm({ project, newsList }: { project: any, newsList: any[] }) {
   const router = useRouter();
@@ -107,6 +108,13 @@ export default function EditFeaturedProjectForm({ project, newsList }: { project
             )}
           </label>
         </div>
+      </div>
+
+      <div className="pt-6 border-t border-gray-100">
+        <PublishSchedule 
+          initialStatus={project.status || 'published'} 
+          initialPublishedAt={project.published_at || null} 
+        />
       </div>
 
       <div className="flex justify-end pt-6 border-t border-gray-100">

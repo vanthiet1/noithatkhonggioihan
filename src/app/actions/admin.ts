@@ -7,7 +7,9 @@ export async function createCategory(formData: FormData) {
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-  const { error } = await supabase.from('categories').insert({ name, slug });
+  const status = formData.get('status') as string || 'published';
+  const published_at = formData.get('published_at') as string || new Date().toISOString();
+  const { error } = await supabase.from('categories').insert({ name, slug, status, published_at });
   if (error) return { error: error.message };
   revalidatePath('/admin/categories');
   revalidatePath('/');
@@ -21,7 +23,15 @@ export async function updateCategory(id: string, formData: FormData) {
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-  const { error } = await supabase.from('categories').update({ name, slug }).eq('id', id);
+  const status = formData.get('status') as string || 'published';
+  const published_at = formData.get('published_at') as string || new Date().toISOString();
+
+  if (status === 'draft') {
+    const { count } = await supabase.from('sub_categories').select('*', { count: 'exact', head: true }).eq('category_id', id);
+    if (count && count > 0) return { error: 'Không thể ẩn danh mục này vì đang chứa danh mục con.' };
+  }
+
+  const { error } = await supabase.from('categories').update({ name, slug, status, published_at }).eq('id', id);
   if (error) return { error: error.message };
   revalidatePath('/admin/categories');
   revalidatePath('/');
@@ -68,7 +78,10 @@ export async function createSubCategory(formData: FormData) {
     }
   }
 
-  const { error } = await supabase.from('sub_categories').insert({ name, slug, category_id, description, image_url });
+  const status = formData.get('status') as string || 'published';
+  const published_at = formData.get('published_at') as string || new Date().toISOString();
+
+  const { error } = await supabase.from('sub_categories').insert({ name, slug, category_id, description, image_url, status, published_at });
   if (error) return { error: error.message };
   revalidatePath('/admin/sub-categories');
   revalidatePath('/');
@@ -142,7 +155,9 @@ export async function createNews(formData: FormData) {
     image_url,
     seo_title: formData.get('seo_title') as string,
     seo_description: formData.get('seo_description') as string,
-    seo_keyword: formData.get('seo_keyword') as string
+    seo_keyword: formData.get('seo_keyword') as string,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
   });
 
   if (error) return { error: error.message };
@@ -169,7 +184,9 @@ export async function updateNews(id: string, formData: FormData) {
     content,
     seo_title: formData.get('seo_title') as string,
     seo_description: formData.get('seo_description') as string,
-    seo_keyword: formData.get('seo_keyword') as string
+    seo_keyword: formData.get('seo_keyword') as string,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
   };
 
   if (image && image.size > 0) {
@@ -254,7 +271,9 @@ export async function createProduct(formData: FormData) {
     sale_price,
     seo_title: formData.get('seo_title') as string,
     seo_description: formData.get('seo_description') as string,
-    seo_keyword: formData.get('seo_keyword') as string
+    seo_keyword: formData.get('seo_keyword') as string,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
   });
 
   if (error) return { error: error.message };
@@ -304,7 +323,9 @@ export async function updateProduct(id: string, formData: FormData) {
     sale_price,
     seo_title: formData.get('seo_title') as string,
     seo_description: formData.get('seo_description') as string,
-    seo_keyword: formData.get('seo_keyword') as string
+    seo_keyword: formData.get('seo_keyword') as string,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
   };
 
   if (image && image.size > 0) {
@@ -409,7 +430,9 @@ export async function createFeaturedProject(formData: FormData) {
     title,
     location,
     link,
-    image_url
+    image_url,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
   });
 
   if (error) return { error: error.message };
@@ -425,7 +448,13 @@ export async function updateFeaturedProject(id: string, formData: FormData) {
   const link = formData.get('link') as string || null;
   const image = formData.get('image') as File | null;
   
-  const updateData: any = { title, location, link };
+  const updateData: any = { 
+    title, 
+    location, 
+    link,
+    status: formData.get('status') as string || 'published',
+    published_at: formData.get('published_at') as string || new Date().toISOString()
+  };
 
   if (image && image.size > 0) {
     const fileExt = image.name.split('.').pop();
@@ -453,6 +482,48 @@ export async function deleteFeaturedProject(id: string) {
   const { error } = await supabase.from('featured_projects').delete().eq('id', id);
   if (error) return { error: error.message };
   revalidatePath('/admin/featured-projects');
+  revalidatePath('/');
+  return { success: true };
+}
+
+export async function toggleStatus(table: string, id: string, newStatus: string) {
+  const supabase = createAdminClient();
+
+  if (newStatus === 'draft') {
+    if (table === 'categories') {
+      const { count } = await supabase.from('sub_categories').select('*', { count: 'exact', head: true }).eq('category_id', id);
+      if (count && count > 0) return { error: 'Không thể ẩn danh mục này vì đang chứa danh mục con.' };
+    } else if (table === 'sub_categories') {
+      const { count } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('sub_category_id', id);
+      if (count && count > 0) return { error: 'Không thể ẩn danh mục này vì đang chứa sản phẩm.' };
+    }
+  }
+
+  const updateData: any = { status: newStatus };
+  
+  // If toggling to published via quick action, ensure it publishes immediately by resetting future dates
+  if (newStatus === 'published') {
+    updateData.published_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase.from(table).update(updateData).eq('id', id);
+  if (error) return { error: error.message };
+  
+  if (table === 'categories') {
+    revalidatePath('/admin/categories');
+    revalidatePath('/danh-muc/[slug]', 'page');
+  } else if (table === 'sub_categories') {
+    revalidatePath('/admin/sub-categories');
+    revalidatePath('/danh-muc/[slug]', 'page');
+  } else if (table === 'news') {
+    revalidatePath('/admin/news');
+    revalidatePath('/tin-tuc');
+  } else if (table === 'featured_projects') {
+    revalidatePath('/admin/featured-projects');
+  } else if (table === 'products') {
+    revalidatePath('/admin/products');
+    revalidatePath('/danh-muc-san-pham/[slug]', 'page');
+  }
   revalidatePath('/');
   return { success: true };
 }

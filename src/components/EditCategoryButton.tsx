@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Edit, X } from 'lucide-react';
 import { updateCategory } from '@/app/actions/admin';
+import PublishSchedule from '@/components/PublishSchedule';
 
 interface EditCategoryButtonProps {
   category: any;
@@ -56,6 +57,13 @@ export default function EditCategoryButton({ category }: EditCategoryButtonProps
                   required
                   placeholder="Tên danh mục..."
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition text-sm text-gray-900"
+                />
+              </div>
+
+              <div className="mb-6 pt-4 border-t border-gray-100">
+                <PublishSchedule 
+                  initialStatus={category.status} 
+                  initialPublishedAt={category.published_at} 
                 />
               </div>
 

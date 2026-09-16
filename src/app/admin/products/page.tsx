@@ -107,6 +107,16 @@ export default async function AdminProductsPage({
                 </td>
                 <td className="px-4 py-3">
                   <p className="font-semibold text-gray-800 text-sm line-clamp-2">{product.name}</p>
+                  <div className="flex gap-2 mt-1">
+                    {product.status === 'draft' ? (
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">Bản nháp</span>
+                    ) : (
+                      <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-medium">Công khai</span>
+                    )}
+                    {product.published_at && new Date(product.published_at) > new Date() && (
+                      <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-medium">Hẹn giờ</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-xs bg-sky-50 text-sky-700 px-2 py-1 rounded-lg font-medium">

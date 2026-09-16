@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { submitContact } from '@/app/actions/contact';
 import Image from 'next/image';
+import Link from 'next/link';
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
@@ -99,11 +100,11 @@ export default function ContactPage() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Dịch Vụ Thi Công</h3>
                 <ul className="space-y-3 text-gray-600 text-sm">
-                  <li>• Cửa Lưới Chống Muỗi</li>
-                  <li>• Tấm Ốp Tường Nano</li>
-                  <li>• Giấy Dán Tường</li>
-                  <li>• Rèm Cửa Cao Cấp</li>
-                  <li>• Tranh Dán Tường 3D</li>
+                  <li><Link href="https://www.noithatkhonggioihan.com/tin-tuc/cua-luoi-chong-muoi-tai-da-nang-giai-phap-giu-nha-thong-thoang-han-che-con-trung" className="hover:text-primary transition-colors">• Cửa Lưới Chống Muỗi</Link></li>
+                  <li><Link href="https://www.noithatkhonggioihan.com/tin-tuc/tam-op-tuong-nano-tai-da-nang-giai-phap-cai-tao-khong-gian-dep-ben" className="hover:text-primary transition-colors">• Tấm Ốp Tường Nano</Link></li>
+                  <li><Link href="https://www.noithatkhonggioihan.com/tin-tuc/giay-dan-tuong-tai-da-nang-giai-phap-trang-tri-tuong-nhanh-dep" className="hover:text-primary transition-colors">• Giấy Dán Tường</Link></li>
+                  <li><Link href="https://www.noithatkhonggioihan.com/tin-tuc/rem-cua-da-nang-mau-dep-cho-nha-o-van-phong-va-cua-hang" className="hover:text-primary transition-colors">• Rèm Cửa Cao Cấp</Link></li>
+                  <li><Link href="https://www.noithatkhonggioihan.com/tin-tuc/tranh-dan-tuong-tai-da-nang-thiet-ke-theo-kich-thuoc-khong-gian" className="hover:text-primary transition-colors">• Tranh Dán Tường 3D</Link></li>
                 </ul>
               </div>
               
@@ -223,7 +224,7 @@ export default function ContactPage() {
                   <Phone className="w-5 h-5 text-primary mt-1 mr-4 shrink-0" />
                   <div>
                     <span className="block text-sm text-gray-400 mb-1">Gọi trực tiếp hoặc qua Zalo</span>
-                    <span className="font-medium">0766 444 789 - 0702 717 010</span>
+                    <span className="font-medium">0766 444 789</span>
                   </div>
                 </li>
                 <li className="flex items-start">

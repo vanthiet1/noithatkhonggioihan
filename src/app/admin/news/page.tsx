@@ -1,9 +1,12 @@
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, Pencil, Trash2, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Eye } from 'lucide-react';
 import { deleteNews } from '@/app/actions/admin';
 import DeleteButton from '@/components/DeleteButton';
+import StatusSelect from '@/components/StatusSelect';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminNewsPage() {
   const supabase = await createClient();
@@ -31,6 +34,7 @@ export default async function AdminNewsPage() {
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-16">Ảnh</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tiêu đề</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Ngày đăng</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Hành động</th>
             </tr>
           </thead>
@@ -50,10 +54,26 @@ export default async function AdminNewsPage() {
                   <p className="text-xs text-gray-400 mt-1 line-clamp-1">{news.excerpt}</p>
                 </td>
                 <td className="px-6 py-3 text-gray-500 text-sm whitespace-nowrap">
-                  {new Date(news.created_at).toLocaleDateString('vi-VN')}
+                  {new Date(news.published_at || news.created_at).toLocaleDateString('vi-VN')}
+                </td>
+                <td className="px-6 py-3">
+                  {news.status === 'draft' ? (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium whitespace-nowrap">Bản nháp</span>
+                  ) : news.published_at && new Date(news.published_at) > new Date() ? (
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-medium flex items-center w-fit whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                      Hẹn giờ
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-xs font-medium whitespace-nowrap">Công khai</span>
+                  )}
                 </td>
                 <td className="px-6 py-3">
                   <div className="flex items-center gap-2">
+                    <StatusSelect id={news.id} table="news" currentStatus={news.status || 'published'} />
+                    <Link href={news.link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs px-3 py-1.5 rounded-lg font-medium bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition">
+                      <Eye className="w-3 h-3 mr-1" /> Xem
+                    </Link>
                     <Link href={`/admin/news/${news.id}/edit`} className="flex items-center text-xs px-3 py-1.5 rounded-lg font-medium bg-sky-50 text-sky-600 hover:bg-sky-100 transition">
                       <Pencil className="w-3 h-3 mr-1" /> Sửa
                     </Link>
