@@ -333,8 +333,8 @@ export default async function CategoryPage({
         // Luôn hiển thị sản phẩm với ảnh chính (image_url)
         expandedProducts.push(prod);
         
-        // Nếu có ảnh trong gallery_images, tạo thêm mỗi ảnh một card với nội dung giữ nguyên
-        if (prod.gallery_images && Array.isArray(prod.gallery_images) && prod.gallery_images.length > 0) {
+        // Nếu có nhiều hơn 1 ảnh trong gallery_images (bộ sưu tập), tạo thêm mỗi ảnh một card với nội dung giữ nguyên
+        if (prod.gallery_images && Array.isArray(prod.gallery_images) && prod.gallery_images.length > 1) {
           prod.gallery_images.forEach((img: string, idx: number) => {
             const fileName = getFileName(img);
             // Chỉ thêm nếu tên file ảnh chưa từng xuất hiện (áp dụng cho toàn bộ danh mục để chống lặp chéo)
@@ -1181,36 +1181,8 @@ export default async function CategoryPage({
           </section>
         )}
 
-        {/* PRODUCTS LIST */}
-        <section id="san-pham" className="py-12 bg-slate-50 border-t border-gray-100">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 uppercase mb-8">CÁC LOẠI {categoryName} PHỔ BIẾN</h2>
-            {paginatedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {paginatedProducts.map((product) => (
-                  <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center flex flex-col group">
-                    <div className="w-[calc(100%+10px)] -mx-[5px] relative mb-4 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
-                      <img src={product.image_url || ''} alt={product.name} className="w-full h-auto object-contain group-hover:scale-105 transition duration-500" />
-                    </div>
-                    <h3 className="font-bold text-[13px] uppercase mb-2 text-gray-800">{product.name}</h3>
-                    <p className="text-[11px] text-gray-500 mb-4 flex-grow line-clamp-2">
-                      {product.description ? product.description.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ') : 'Giải pháp tối ưu cho không gian của bạn.'}
-                    </p>
-                    <Link href={`/danh-muc-san-pham/${product.slug}`} className="border border-primary text-primary hover:bg-primary hover:text-white py-1.5 rounded-full text-xs font-semibold transition mt-auto w-max mx-auto px-4">
-                      XEM CHI TIẾT
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center">Chưa có sản phẩm nào trong danh mục này.</p>
-            )}
-            {/* The pagination here was moved below to the second products block, or we can keep it here and below, but let's just keep it once at the bottom */}
-          </div>
-        </section>
-
         {/* 2B. ACTUAL PRODUCTS LIST WITH PRICING UI */}
-        <section className="py-12 bg-white border-t border-gray-100">
+        <section id="san-pham" className="py-12 bg-white border-t border-gray-100">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 uppercase mb-8">SẢN PHẨM {categoryName}</h2>
             {paginatedProducts.length > 0 ? (

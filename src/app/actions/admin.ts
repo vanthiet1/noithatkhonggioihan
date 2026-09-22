@@ -339,8 +339,57 @@ export async function updateProduct(id: string, formData: FormData) {
       
     if (!uploadError) {
       const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
-      updateData.image_url = data.publicUrl;
-      // Ideally we should append to gallery_images, but for simple update we just update the main image
+      const newImageUrl = data.publicUrl;
+      updateData.image_url = newImageUrl;
+
+      // Cập nhật đồng bộ gallery_images để tránh ảnh cũ bị lưu lại làm nhân bản card sản phẩm
+      const { data: currentProduct } = await supabase
+        .from('products')
+        .select('image_url, gallery_images')
+        .eq('id', id)
+        .single();
+
+      if (currentProduct) {
+        const oldImageUrl = currentProduct.image_url;
+        let currentGallery: string[] = [];
+        if (Array.isArray(currentProduct.gallery_images)) {
+          currentGallery = currentProduct.gallery_images;
+        } else if (typeof currentProduct.gallery_images === 'string') {
+          try {
+            currentGallery = JSON.parse(currentProduct.gallery_images);
+          } catch {
+            currentGallery = currentProduct.gallery_images.split(',').map((s: string) => s.trim()).filter(Boolean);
+          }
+        }
+
+        if (currentGallery.length <= 1) {
+          updateData.gallery_images = [newImageUrl];
+        } else {
+          const getFileName = (url: string) => {
+            if (!url) return '';
+            let name = url.split('/').pop()?.split('?')[0] || '';
+            name = name.replace(/-\d+x\d+(?=\.[a-zA-Z0-9]+$)/, '');
+            return name;
+          };
+          const oldFileName = getFileName(oldImageUrl);
+
+          let replaced = false;
+          const updatedGallery = currentGallery.map((img: string) => {
+            if (img === oldImageUrl || (oldFileName && getFileName(img) === oldFileName)) {
+              replaced = true;
+              return newImageUrl;
+            }
+            return img;
+          });
+
+          if (!replaced) {
+            updatedGallery.unshift(newImageUrl);
+          }
+          updateData.gallery_images = updatedGallery;
+        }
+      } else {
+        updateData.gallery_images = [newImageUrl];
+      }
     }
   }
 
