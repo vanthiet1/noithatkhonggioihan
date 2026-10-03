@@ -109,6 +109,30 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', 'AW-10869121978');
+
+              function gtag_report_conversion(url) {
+                var callback = function () {
+                  if (typeof(url) != 'undefined') {
+                    window.location = url;
+                  }
+                };
+                gtag('event', 'conversion', {
+                    'send_to': 'AW-10869121978/xVTdCJmyzKoDELrH5r4o',
+                    'event_callback': callback
+                });
+                return false;
+              }
+
+              if (typeof document !== 'undefined') {
+                document.addEventListener('click', function(e) {
+                  var target = e.target && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
+                  if (target) {
+                    gtag('event', 'conversion', {
+                      'send_to': 'AW-10869121978/xVTdCJmyzKoDELrH5r4o'
+                    });
+                  }
+                }, true);
+              }
             `,
           }}
         />
