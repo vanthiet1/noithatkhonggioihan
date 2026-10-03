@@ -14,7 +14,6 @@ import Footer from "@/components/Footer";
 import FloatingContact from "@/components/FloatingContact";
 import { ClientLayoutWrapper } from "@/components/ClientLayoutWrapper";
 import NextTopLoader from 'nextjs-toploader';
-import Script from 'next/script';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL as string),
@@ -98,23 +97,25 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Google tag (gtag.js) */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-10869121978"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-10869121978');
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
-        <Script
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=AW-10869121978"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-10869121978');
-            gtag('event', 'conversion', {'send_to': 'AW-10869121978/FlPQCNDXzKoDELrH5r4o'});
-          `}
-        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-white font-sans" suppressHydrationWarning>
         <NextTopLoader color="#0284c7" showSpinner={false} height={3} shadow="0 0 10px #0284c7,0 0 5px #0284c7" />
