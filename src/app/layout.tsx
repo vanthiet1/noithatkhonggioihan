@@ -110,25 +110,61 @@ export default function RootLayout({
               gtag('js', new Date());
               gtag('config', 'AW-10869121978');
 
+              // 1. Chuyển đổi cuộc gọi di động (call mobile)
               function gtag_report_conversion(url) {
                 var callback = function () {
                   if (typeof(url) != 'undefined') {
                     window.location = url;
                   }
                 };
+                var isZalo = url && (typeof url === 'string') && url.indexOf('zalo.me') !== -1;
+                var sendTo = isZalo ? 'AW-10869121978/0XEoCMrlpq0DELrH5r4o' : 'AW-10869121978/xVTdCJmyzKoDELrH5r4o';
                 gtag('event', 'conversion', {
-                    'send_to': 'AW-10869121978/xVTdCJmyzKoDELrH5r4o',
+                    'send_to': sendTo,
+                    'value': 0.0,
+                    'currency': 'VND',
+                    'transaction_id': '',
                     'event_callback': callback
                 });
                 return false;
               }
 
+              // 2. Chuyển đổi mua hàng / đặt hàng qua Zalo ([f433] purchase action)
+              function gtag_report_purchase(url) {
+                var callback = function () {
+                  if (typeof(url) != 'undefined') {
+                    window.location = url;
+                  }
+                };
+                gtag('event', 'conversion', {
+                    'send_to': 'AW-10869121978/0XEoCMrlpq0DELrH5r4o',
+                    'value': 0.0,
+                    'currency': 'VND',
+                    'transaction_id': '',
+                    'event_callback': callback
+                });
+                return false;
+              }
+
+              // Tự động bắt sự kiện click nút Gọi điện thoại và nút Chat Zalo trên toàn website
               if (typeof document !== 'undefined') {
                 document.addEventListener('click', function(e) {
-                  var target = e.target && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
-                  if (target) {
+                  // Cuộc gọi (call mobile)
+                  var telTarget = e.target && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
+                  if (telTarget) {
                     gtag('event', 'conversion', {
                       'send_to': 'AW-10869121978/xVTdCJmyzKoDELrH5r4o'
+                    });
+                  }
+
+                  // Mua hàng / đặt hàng qua Chat Zalo ([f433] purchase action)
+                  var zaloTarget = e.target && e.target.closest ? e.target.closest('a[href*="zalo.me"]') : null;
+                  if (zaloTarget) {
+                    gtag('event', 'conversion', {
+                      'send_to': 'AW-10869121978/0XEoCMrlpq0DELrH5r4o',
+                      'value': 0.0,
+                      'currency': 'VND',
+                      'transaction_id': ''
                     });
                   }
                 }, true);
