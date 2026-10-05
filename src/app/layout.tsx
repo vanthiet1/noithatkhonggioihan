@@ -97,6 +97,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Google Tag Manager */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-N7Q3MV5');`,
+          }}
+        />
+        {/* End Google Tag Manager */}
         {/* Google tag (gtag.js) */}
         <script
           async
@@ -178,6 +189,16 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-white font-sans" suppressHydrationWarning>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-N7Q3MV5"
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
         <NextTopLoader color="#0284c7" showSpinner={false} height={3} shadow="0 0 10px #0284c7,0 0 5px #0284c7" />
         <ClientLayoutWrapper
           header={<Navbar />}
