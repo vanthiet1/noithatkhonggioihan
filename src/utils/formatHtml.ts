@@ -28,3 +28,23 @@ export const formatHTML = (html: string) => {
   
   return formatted.trim();
 };
+
+export const cleanHtmlImages = (html: string): string => {
+  if (!html) return '';
+  return html.replace(/<img\b([^>]*?)>/gi, (match, attrs) => {
+    const dataSrcMatch = attrs.match(/data-src=["']([^"']+)["']/i) || 
+                         attrs.match(/data-lazy-src=["']([^"']+)["']/i) || 
+                         attrs.match(/data-original=["']([^"']+)["']/i);
+    if (dataSrcMatch && dataSrcMatch[1]) {
+      const realUrl = dataSrcMatch[1];
+      let newAttrs = attrs;
+      if (/src=["'][^"']*data:image\/svg[^"']*["']/i.test(newAttrs)) {
+        newAttrs = newAttrs.replace(/src=["'][^"']*data:image\/svg[^"']*["']/i, `src="${realUrl}"`);
+      } else if (!/src=/i.test(newAttrs)) {
+        newAttrs = `src="${realUrl}" ` + newAttrs;
+      }
+      return '<img ' + newAttrs.trim() + '>';
+    }
+    return match;
+  });
+};

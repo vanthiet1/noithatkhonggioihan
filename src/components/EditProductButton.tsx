@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit, X } from 'lucide-react';
 import { updateProduct, uploadEditorImage } from '@/app/actions/admin';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import PublishSchedule from '@/components/PublishSchedule';
 import 'react-quill-new/dist/quill.snow.css';
-import { formatHTML } from '@/utils/formatHtml';
+import { formatHTML, cleanHtmlImages } from '@/utils/formatHtml';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { 
   ssr: false, 
@@ -21,15 +22,34 @@ interface EditProductButtonProps {
 }
 
 export default function EditProductButton({ product, categories, subCategories }: EditProductButtonProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [description, setDescription] = useState(formatHTML(product.description || ''));
+  const [description, setDescription] = useState(cleanHtmlImages(product.description || ''));
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const quillRef = useRef<any>(null);
+  const [isHtmlMode, setIsHtmlMode] = useState(false);
+
+  const handleOpen = () => {
+    setDescription(cleanHtmlImages(product.description || ''));
+    setPreviewImage(null);
+    setIsOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    formData.set('description', description);
+    
+    // Luôn lấy nội dung HTML mới nhất từ Quill editor nếu không ở chế độ source HTML
+    let currentDesc = description;
+    if (!isHtmlMode && quillRef.current) {
+      const editor = quillRef.current.getEditor?.();
+      if (editor?.root?.innerHTML) {
+        currentDesc = editor.root.innerHTML;
+      }
+    }
+    formData.set('description', cleanHtmlImages(currentDesc));
     
     const res = await updateProduct(product.id, formData);
     setIsSubmitting(false);
@@ -37,13 +57,11 @@ export default function EditProductButton({ product, categories, subCategories }
       alert(res.error);
     } else {
       setIsOpen(false);
+      router.refresh();
     }
   };
 
-  const quillRef = useRef<any>(null);
-  const [isHtmlMode, setIsHtmlMode] = useState(false);
-
-  const imageHandler = async () => {
+  const imageHandler = () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -58,14 +76,19 @@ export default function EditProductButton({ product, categories, subCategories }
         const res = await uploadEditorImage(formData);
         
         if (res.url) {
-          const quill = quillRef.current?.getEditor();
+          const quill = quillRef.current?.getEditor?.();
           if (quill) {
-            const range = quill.getSelection(true);
+            const range = quill.getSelection(true) || { index: quill.getLength() };
             quill.insertEmbed(range.index, 'image', res.url);
             if (altText) {
-              quill.formatText(range.index, 1, 'alt', altText);
+              const [leaf] = quill.getLeaf(range.index);
+              if (leaf?.domNode) {
+                leaf.domNode.setAttribute('alt', altText);
+              }
             }
             quill.setSelection(range.index + 1);
+            // Đồng bộ trực tiếp HTML mới nhất vào state description
+            setDescription(quill.root.innerHTML);
           }
         } else {
           alert('Lỗi tải ảnh lên: ' + res.error);
@@ -74,7 +97,7 @@ export default function EditProductButton({ product, categories, subCategories }
     };
   };
 
-  const modules = {
+  const modules = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
@@ -94,12 +117,14 @@ export default function EditProductButton({ product, categories, subCategories }
         image: imageHandler
       }
     }
-  };
+  }), []);
+
+  const displayCurrentImg = previewImage || product.image_url || (product.gallery_images && product.gallery_images.length > 0 ? product.gallery_images[0] : null);
 
   return (
     <>
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="text-xs px-3 py-1.5 rounded-lg font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition"
       >
         Sửa
@@ -128,14 +153,13 @@ export default function EditProductButton({ product, categories, subCategories }
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Danh mục con *</label>
+                  <label className="block text-sm font-medium text-gray-700">Danh mục con</label>
                   <select 
                     name="sub_category_id" 
-                    required 
-                    defaultValue={product.sub_category_id}
+                    defaultValue={product.sub_category_id || ''}
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-gray-900"
                   >
-                    <option value="">Chọn danh mục con</option>
+                    <option value="">-- Chọn danh mục con (hoặc để trống) --</option>
                     {categories.map(cat => (
                       <optgroup key={cat.id} label={cat.name}>
                         {subCategories.filter(sub => sub.category_id === cat.id).map(sub => (
@@ -208,15 +232,21 @@ export default function EditProductButton({ product, categories, subCategories }
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Hình ảnh mới (Để trống nếu giữ nguyên)</label>
                 <div className="flex gap-4 items-center">
-                  {product.image_url && (
+                  {displayCurrentImg && (
                     <div className="w-16 h-16 rounded-xl overflow-hidden relative border border-gray-200 flex-shrink-0">
-                      <Image src={product.image_url} alt="Current" fill className="object-cover" />
+                      <Image src={displayCurrentImg} alt="Current" fill className="object-cover" />
                     </div>
                   )}
                   <input 
                     type="file" 
                     name="image" 
                     accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setPreviewImage(URL.createObjectURL(file));
+                      }
+                    }}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition cursor-pointer"
                   />
                 </div>
@@ -229,13 +259,14 @@ export default function EditProductButton({ product, categories, subCategories }
                     type="button" 
                     onClick={() => {
                       if (!isHtmlMode) {
+                        // Khi chuyển sang HTML source, format lại để dễ đọc
                         setDescription(formatHTML(description));
                       }
                       setIsHtmlMode(!isHtmlMode);
                     }}
                     className="text-xs px-3 py-1.5 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
                   >
-                    {isHtmlMode ? 'Chuyển sang Trình soạn thảo' : 'Chỉnh sửa HTML (Source)'}
+                    {isHtmlMode ? 'Chuyển sang Trình soạn thảo trực quan' : 'Chỉnh sửa mã HTML (Source)'}
                   </button>
                 </div>
                 <div className="bg-white border-gray-200 rounded-xl overflow-hidden" style={{ minHeight: '600px' }}>
@@ -282,4 +313,3 @@ export default function EditProductButton({ product, categories, subCategories }
     </>
   );
 }
-

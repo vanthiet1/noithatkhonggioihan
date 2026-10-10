@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import TagsInput from '@/components/TagsInput';
 import PublishSchedule from '@/components/PublishSchedule';
 import 'react-quill-new/dist/quill.snow.css';
-import { formatHTML } from '@/utils/formatHtml';
+import { formatHTML, cleanHtmlImages } from '@/utils/formatHtml';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { 
   ssr: false, 
@@ -37,7 +37,15 @@ export default function CreateProductForm({
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    formData.set('description', description);
+    
+    let currentDesc = description;
+    if (!isHtmlMode && quillRef.current) {
+      const editor = quillRef.current.getEditor?.();
+      if (editor?.root?.innerHTML) {
+        currentDesc = editor.root.innerHTML;
+      }
+    }
+    formData.set('description', cleanHtmlImages(currentDesc));
     
     const result = await createProduct(formData);
     
@@ -52,7 +60,7 @@ export default function CreateProductForm({
   const quillRef = useRef<any>(null);
   const [isHtmlMode, setIsHtmlMode] = useState(false);
 
-  const imageHandler = async () => {
+  const imageHandler = () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -67,14 +75,18 @@ export default function CreateProductForm({
         const res = await uploadEditorImage(formData);
         
         if (res.url) {
-          const quill = quillRef.current?.getEditor();
+          const quill = quillRef.current?.getEditor?.();
           if (quill) {
-            const range = quill.getSelection(true);
+            const range = quill.getSelection(true) || { index: quill.getLength() };
             quill.insertEmbed(range.index, 'image', res.url);
             if (altText) {
-              quill.formatText(range.index, 1, 'alt', altText);
+              const [leaf] = quill.getLeaf(range.index);
+              if (leaf?.domNode) {
+                leaf.domNode.setAttribute('alt', altText);
+              }
             }
             quill.setSelection(range.index + 1);
+            setDescription(quill.root.innerHTML);
           }
         } else {
           alert('Lỗi tải ảnh lên: ' + res.error);

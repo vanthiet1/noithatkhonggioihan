@@ -4,6 +4,7 @@ import { useState, useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Star, CheckCircle } from 'lucide-react';
 import { submitReview } from '@/app/actions/review';
+import { cleanHtmlImages } from '@/utils/formatHtml';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -98,7 +99,7 @@ export default function ProductTabs({ product, reviews }: ProductTabsProps) {
             <h2 className="text-2xl font-bold mb-6 text-gray-800">Thông tin chi tiết {product.name}</h2>
             <div className="prose max-w-none text-gray-700 leading-relaxed space-y-4 [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:my-6 [&>h1]:text-center [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:my-4 [&>h3]:text-xl [&>h3]:font-bold [&>h3]:my-3 [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4">
               {product.description ? (
-                 <div className="w-full" dangerouslySetInnerHTML={{ __html: (product.description || '').replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ') }} />
+                 <div className="w-full" dangerouslySetInnerHTML={{ __html: cleanHtmlImages(product.description || '').replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ') }} />
               ) : (
                 <>
                   <p>Sản phẩm <strong>{product.name}</strong> được cung cấp và thi công trực tiếp bởi Nội Thất Không Giới Hạn tại khu vực Đà Nẵng, Quảng Nam và các tỉnh lân cận.</p>

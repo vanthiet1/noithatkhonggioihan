@@ -1,6 +1,7 @@
 'use server'
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { cleanHtmlImages } from '@/utils/formatHtml';
 
 // =================== CATEGORIES ===================
 export async function createCategory(formData: FormData) {
@@ -227,8 +228,9 @@ export async function deleteNews(id: string) {
 export async function createProduct(formData: FormData) {
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
-  const sub_category_id = formData.get('sub_category_id') as string;
-  const description = formData.get('description') as string;
+  const rawSubCat = (formData.get('sub_category_id') as string)?.trim();
+  const sub_category_id = rawSubCat || null;
+  const description = cleanHtmlImages((formData.get('description') as string) || '');
   const image = formData.get('image') as File | null;
   
   const original_price = formData.get('original_price') as string;
@@ -236,9 +238,12 @@ export async function createProduct(formData: FormData) {
   
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
   
-  // Get category_id from sub_category
-  const { data: subCat } = await supabase.from('sub_categories').select('category_id').eq('id', sub_category_id).single();
-  const category_id = subCat?.category_id;
+  // Get category_id from sub_category if present
+  let category_id = null;
+  if (sub_category_id) {
+    const { data: subCat } = await supabase.from('sub_categories').select('category_id').eq('id', sub_category_id).single();
+    category_id = subCat?.category_id || null;
+  }
 
   let image_url = null;
   let gallery_images: string[] = [];
@@ -252,11 +257,13 @@ export async function createProduct(formData: FormData) {
       .from('product-images')
       .upload(filePath, image);
       
-    if (!uploadError) {
-      const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
-      image_url = data.publicUrl;
-      gallery_images = [data.publicUrl];
+    if (uploadError) {
+      return { error: 'Lỗi tải ảnh chính: ' + uploadError.message };
     }
+
+    const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
+    image_url = data.publicUrl;
+    gallery_images = [data.publicUrl];
   }
 
   const { error } = await supabase.from('products').insert({
@@ -281,6 +288,7 @@ export async function createProduct(formData: FormData) {
   revalidatePath('/');
   revalidatePath('/danh-muc/[slug]', 'page');
   revalidatePath('/danh-muc-san-pham/[slug]', 'page');
+  revalidatePath(`/danh-muc-san-pham/${slug}`);
   revalidatePath('/dich-vu-noi-that');
   revalidatePath('/sitemap.xml');
   return { success: true };
@@ -301,17 +309,28 @@ export async function deleteProduct(id: string) {
 export async function updateProduct(id: string, formData: FormData) {
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
-  const sub_category_id = formData.get('sub_category_id') as string;
-  const description = formData.get('description') as string;
+  const rawSubCat = (formData.get('sub_category_id') as string)?.trim();
+  const sub_category_id = rawSubCat || null;
+  const description = cleanHtmlImages((formData.get('description') as string) || '');
   const original_price = formData.get('original_price') as string;
   const sale_price = formData.get('sale_price') as string;
   const image = formData.get('image') as File | null;
   
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
   
-  // Get category_id from sub_category
-  const { data: subCat } = await supabase.from('sub_categories').select('category_id').eq('id', sub_category_id).single();
-  const category_id = subCat?.category_id;
+  // Get category_id from sub_category if present
+  let category_id = null;
+  if (sub_category_id) {
+    const { data: subCat } = await supabase.from('sub_categories').select('category_id').eq('id', sub_category_id).single();
+    category_id = subCat?.category_id || null;
+  }
+
+  // Get current product to keep old data if needed
+  const { data: currentProduct } = await supabase
+    .from('products')
+    .select('slug, image_url, gallery_images')
+    .eq('id', id)
+    .single();
 
   const updateData: any = {
     name,
@@ -337,68 +356,69 @@ export async function updateProduct(id: string, formData: FormData) {
       .from('product-images')
       .upload(filePath, image);
       
-    if (!uploadError) {
-      const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
-      const newImageUrl = data.publicUrl;
-      updateData.image_url = newImageUrl;
+    if (uploadError) {
+      return { error: 'Lỗi tải ảnh chính: ' + uploadError.message };
+    }
 
-      // Cập nhật đồng bộ gallery_images để tránh ảnh cũ bị lưu lại làm nhân bản card sản phẩm
-      const { data: currentProduct } = await supabase
-        .from('products')
-        .select('image_url, gallery_images')
-        .eq('id', id)
-        .single();
+    const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
+    const newImageUrl = data.publicUrl;
+    updateData.image_url = newImageUrl;
 
-      if (currentProduct) {
-        const oldImageUrl = currentProduct.image_url;
-        let currentGallery: string[] = [];
-        if (Array.isArray(currentProduct.gallery_images)) {
-          currentGallery = currentProduct.gallery_images;
-        } else if (typeof currentProduct.gallery_images === 'string') {
-          try {
-            currentGallery = JSON.parse(currentProduct.gallery_images);
-          } catch {
-            currentGallery = currentProduct.gallery_images.split(',').map((s: string) => s.trim()).filter(Boolean);
-          }
+    // Cập nhật đồng bộ gallery_images để tránh ảnh cũ bị lưu lại làm nhân bản card sản phẩm
+    if (currentProduct) {
+      const oldImageUrl = currentProduct.image_url;
+      let currentGallery: string[] = [];
+      if (Array.isArray(currentProduct.gallery_images)) {
+        currentGallery = currentProduct.gallery_images;
+      } else if (typeof currentProduct.gallery_images === 'string') {
+        try {
+          currentGallery = JSON.parse(currentProduct.gallery_images);
+        } catch {
+          currentGallery = currentProduct.gallery_images.split(',').map((s: string) => s.trim()).filter(Boolean);
         }
-
-        if (currentGallery.length <= 1) {
-          updateData.gallery_images = [newImageUrl];
-        } else {
-          const getFileName = (url: string) => {
-            if (!url) return '';
-            let name = url.split('/').pop()?.split('?')[0] || '';
-            name = name.replace(/-\d+x\d+(?=\.[a-zA-Z0-9]+$)/, '');
-            return name;
-          };
-          const oldFileName = getFileName(oldImageUrl);
-
-          let replaced = false;
-          const updatedGallery = currentGallery.map((img: string) => {
-            if (img === oldImageUrl || (oldFileName && getFileName(img) === oldFileName)) {
-              replaced = true;
-              return newImageUrl;
-            }
-            return img;
-          });
-
-          if (!replaced) {
-            updatedGallery.unshift(newImageUrl);
-          }
-          updateData.gallery_images = updatedGallery;
-        }
-      } else {
-        updateData.gallery_images = [newImageUrl];
       }
+
+      if (currentGallery.length <= 1) {
+        updateData.gallery_images = [newImageUrl];
+      } else {
+        const getFileName = (url: string) => {
+          if (!url) return '';
+          let fileName = url.split('/').pop()?.split('?')[0] || '';
+          fileName = fileName.replace(/-\d+x\d+(?=\.[a-zA-Z0-9]+$)/, '');
+          return fileName;
+        };
+        const oldFileName = getFileName(oldImageUrl);
+
+        let replaced = false;
+        const updatedGallery = currentGallery.map((img: string) => {
+          if (img === oldImageUrl || (oldFileName && getFileName(img) === oldFileName)) {
+            replaced = true;
+            return newImageUrl;
+          }
+          return img;
+        });
+
+        if (!replaced) {
+          updatedGallery.unshift(newImageUrl);
+        }
+        updateData.gallery_images = updatedGallery;
+      }
+    } else {
+      updateData.gallery_images = [newImageUrl];
     }
   }
 
   const { error } = await supabase.from('products').update(updateData).eq('id', id);
   if (error) return { error: error.message };
+
   revalidatePath('/admin/products');
   revalidatePath('/');
   revalidatePath('/danh-muc/[slug]', 'page');
   revalidatePath('/danh-muc-san-pham/[slug]', 'page');
+  revalidatePath(`/danh-muc-san-pham/${slug}`);
+  if (currentProduct?.slug && currentProduct.slug !== slug) {
+    revalidatePath(`/danh-muc-san-pham/${currentProduct.slug}`);
+  }
   revalidatePath('/dich-vu-noi-that');
   revalidatePath('/sitemap.xml');
   return { success: true };
