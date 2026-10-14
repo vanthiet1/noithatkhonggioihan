@@ -50,42 +50,134 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "WebSite",
+        "@type": "HomeAndConstructionBusiness",
+        "@id": "https://www.noithatkhonggioihan.com/#organization",
         "name": "Nội Thất Không Giới Hạn",
-        "url": process.env.NEXT_PUBLIC_BASE_URL || "https://noithatkhonggioihan.com",
-      },
-      {
-        "@type": "LocalBusiness",
-        "name": "Nội Thất Không Giới Hạn",
-        "image": "/logo.png",
-        "@id": "",
-        "url": process.env.NEXT_PUBLIC_BASE_URL || "https://noithatkhonggioihan.com",
-        "telephone": "0766444789",
+        "alternateName": "Nội Thất Không Giới Hạn Đà Nẵng",
+        "url": "https://www.noithatkhonggioihan.com/",
+        "logo": "https://www.noithatkhonggioihan.com/logo.png",
+        "image": "https://www.noithatkhonggioihan.com/logo.png",
+        "description": "Nội Thất Không Giới Hạn chuyên tư vấn, cung cấp và thi công cửa lưới chống muỗi, tấm ốp tường Nano, giấy dán tường, tranh dán tường và rèm cửa tại Đà Nẵng.",
+        "telephone": "+84766444789",
+        "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "180 Nguyễn Bá Loan, Hòa Xuân",
           "addressLocality": "Đà Nẵng",
-          "addressRegion": "Đà Nẵng",
           "addressCountry": "VN"
         },
-        "openingHoursSpecification": {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
-          ],
-          "opens": "08:00",
-          "closes": "21:00"
-        },
+        "areaServed": [
+          {
+            "@type": "Place",
+            "name": "Đà Nẵng, Việt Nam"
+          },
+          {
+            "@type": "Place",
+            "name": "Quảng Nam, Việt Nam"
+          }
+        ],
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday"
+            ],
+            "opens": "08:00",
+            "closes": "21:00"
+          }
+        ],
         "sameAs": [
           "https://www.facebook.com/noithatkhonggioihan",
-          "https://www.youtube.com/channel/UC53MggDP9Q9iWIeH5pvl_VA"
-        ]
+          "https://www.youtube.com/channel/UC53MggDP9Q9iWIeH5pvl_VA",
+          "https://www.efunda.com/members/people/show_people.cfm?Usr=noithatkhongg",
+          "https://egamerprofile.com/player/noithatkhonggtw",
+          "https://forum.issabel.org/u/noithatkhongg",
+          "https://odesli.co/zsc35g0hdhhcf",
+          "https://solo.to/noithatkhongg",
+          "https://cybermos.ru/user/262421/",
+          "http://jobboard.piasd.org/author/noithatkhongg/",
+          "https://md.sebastians.dev/s/xuAYrRjM8",
+          "https://www.weddingvendors.com/directory/profile/52158/",
+          "https://aiti.edu.vn/members/noithatkhongg.75364/",
+          "https://www.preferredprofessionals.com/actuaries/n%E1%BB%99i-th%E1%BA%A5t-kh%C3%B4ng-gi%E1%BB%9Bi-h%E1%BA%A1n",
+          "https://awan.pro/forum/user/221114/",
+          "https://onespotsocial.com/noithatkhongg",
+          "https://www.klynt.net/members/noithatkhongg",
+          "http://delphi.larsbo.org/user/noithatkhongg",
+          "https://phijkchu.com/a/noithatkhongg/video-channels",
+          "https://dreevoo.com/profile_info.php?pid=2395888",
+          "https://forums.maxperformanceinc.com/forums/member.php?u=262982",
+          "https://md.kif.rocks/s/Xhu5nkVdOk",
+          "https://learningapps.org/display?v=pacsadtfj26",
+          "http://www.muzikspace.com/profiledetails.aspx?profileid=161542",
+          "https://businesslistingplus.com/profile/noithatkhongg/",
+          "https://bio.site/noithatkhongg",
+          "https://promosimple.com/ps/510bb/noithatkhongg",
+          "https://song.link/noithatkhongg",
+          "https://soundation.com/user/noithatkhongg",
+          "https://www.geogebra.org/m/cqfgyvub"
+        ],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Dịch vụ nội thất tại Đà Nẵng",
+          "itemListElement": [
+            {
+              "@type": "OfferCatalog",
+              "name": "Cửa lưới chống muỗi Đà Nẵng",
+              "url": "https://www.noithatkhonggioihan.com/tin-tuc/cua-luoi-chong-muoi-tai-da-nang-giai-phap-giu-nha-thong-thoang-han-che-con-trung"
+            },
+            {
+              "@type": "OfferCatalog",
+              "name": "Tấm ốp tường Nano Đà Nẵng",
+              "url": "https://www.noithatkhonggioihan.com/tin-tuc/tam-op-tuong-nano-tai-da-nang-giai-phap-cai-tao-khong-gian-dep-ben"
+            },
+            {
+              "@type": "OfferCatalog",
+              "name": "Giấy dán tường Đà Nẵng",
+              "url": "https://www.noithatkhonggioihan.com/tin-tuc/giay-dan-tuong-tai-da-nang-giai-phap-trang-tri-tuong-nhanh-dep"
+            },
+            {
+              "@type": "OfferCatalog",
+              "name": "Rèm cửa Đà Nẵng",
+              "url": "https://www.noithatkhonggioihan.com/tin-tuc/rem-cua-da-nang-mau-dep-cho-nha-o-van-phong-va-cua-hang"
+            },
+            {
+              "@type": "OfferCatalog",
+              "name": "Tranh dán tường Đà Nẵng",
+              "url": "https://www.noithatkhonggioihan.com/tin-tuc/tranh-dan-tuong-tai-da-nang-thiet-ke-theo-kich-thuoc-khong-gian"
+            }
+          ]
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.noithatkhonggioihan.com/#website",
+        "url": "https://www.noithatkhonggioihan.com/",
+        "name": "Nội Thất Không Giới Hạn",
+        "inLanguage": "vi-VN",
+        "publisher": {
+          "@id": "https://www.noithatkhonggioihan.com/#organization"
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.noithatkhonggioihan.com/#webpage",
+        "url": "https://www.noithatkhonggioihan.com/",
+        "name": "Nội Thất Không Giới Hạn - Thi Công Nội Thất Đà Nẵng",
+        "description": "Chuyên tư vấn và thi công nội thất tại Đà Nẵng gồm cửa lưới chống muỗi, tấm ốp tường Nano, giấy dán tường, rèm cửa và tranh dán tường.",
+        "isPartOf": {
+          "@id": "https://www.noithatkhonggioihan.com/#website"
+        },
+        "about": {
+          "@id": "https://www.noithatkhonggioihan.com/#organization"
+        },
+        "inLanguage": "vi-VN"
       }
     ]
   };
