@@ -29,7 +29,7 @@ export default function CreateNewsForm() {
     
     const result = await createNews(formData);
     
-    if (result.error) {
+    if ('error' in result && result.error) {
       alert(result.error);
       setIsSubmitting(false);
     } else {
@@ -54,7 +54,7 @@ export default function CreateNewsForm() {
         formData.append('image', file);
         const res = await uploadEditorImage(formData);
         
-        if (res.url) {
+        if ('url' in res && res.url) {
           const quill = quillRef.current?.getEditor();
           if (quill) {
             const range = quill.getSelection(true);
@@ -65,7 +65,7 @@ export default function CreateNewsForm() {
             quill.setSelection(range.index + 1);
           }
         } else {
-          alert('Lỗi tải ảnh lên: ' + res.error);
+          alert('Lỗi tải ảnh lên: ' + ('error' in res ? res.error : ''));
         }
       }
     };

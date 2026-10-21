@@ -27,7 +27,7 @@ export default function CreateSubCategoryForm({ categories }: CreateSubCategoryF
     
     setLoading(false);
     
-    if (result.error) {
+    if ('error' in result && result.error) {
       alert(`Lỗi: ${result.error}`);
     } else {
       alert('Thêm danh mục con thành công!');

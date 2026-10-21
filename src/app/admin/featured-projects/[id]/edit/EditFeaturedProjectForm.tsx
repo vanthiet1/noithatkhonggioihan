@@ -27,7 +27,7 @@ export default function EditFeaturedProjectForm({ project, newsList }: { project
     const formData = new FormData(e.currentTarget);
     const result = await updateFeaturedProject(project.id, formData);
     
-    if (result.error) {
+    if ('error' in result && result.error) {
       alert(result.error);
       setLoading(false);
     } else {

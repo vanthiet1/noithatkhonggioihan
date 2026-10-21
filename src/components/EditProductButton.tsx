@@ -53,7 +53,7 @@ export default function EditProductButton({ product, categories, subCategories }
     
     const res = await updateProduct(product.id, formData);
     setIsSubmitting(false);
-    if (res.error) {
+    if ('error' in res && res.error) {
       alert(res.error);
     } else {
       setIsOpen(false);
@@ -75,7 +75,7 @@ export default function EditProductButton({ product, categories, subCategories }
         formData.append('image', file);
         const res = await uploadEditorImage(formData);
         
-        if (res.url) {
+        if ('url' in res && res.url) {
           const quill = quillRef.current?.getEditor?.();
           if (quill) {
             const range = quill.getSelection(true) || { index: quill.getLength() };
@@ -91,7 +91,7 @@ export default function EditProductButton({ product, categories, subCategories }
             setDescription(quill.root.innerHTML);
           }
         } else {
-          alert('Lỗi tải ảnh lên: ' + res.error);
+          alert('Lỗi tải ảnh lên: ' + ('error' in res ? res.error : ''));
         }
       }
     };

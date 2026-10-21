@@ -21,7 +21,7 @@ export default function StatusSelect({ id, table, currentStatus }: StatusSelectP
     setLoading(true);
     try {
       const result = await toggleStatus(table, id, newStatus);
-      if (result?.error) {
+      if (result && 'error' in result && result.error) {
         alert("Lỗi khi cập nhật trạng thái: " + result.error);
         e.target.value = currentStatus; // revert
       }

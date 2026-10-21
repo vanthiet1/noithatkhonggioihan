@@ -49,7 +49,7 @@ export default function CreateProductForm({
     
     const result = await createProduct(formData);
     
-    if (result.error) {
+    if ('error' in result && result.error) {
       alert(result.error);
       setIsSubmitting(false);
     } else {
@@ -74,7 +74,7 @@ export default function CreateProductForm({
         formData.append('image', file);
         const res = await uploadEditorImage(formData);
         
-        if (res.url) {
+        if ('url' in res && res.url) {
           const quill = quillRef.current?.getEditor?.();
           if (quill) {
             const range = quill.getSelection(true) || { index: quill.getLength() };
@@ -89,7 +89,7 @@ export default function CreateProductForm({
             setDescription(quill.root.innerHTML);
           }
         } else {
-          alert('Lỗi tải ảnh lên: ' + res.error);
+          alert('Lỗi tải ảnh lên: ' + ('error' in res ? res.error : ''));
         }
       }
     };

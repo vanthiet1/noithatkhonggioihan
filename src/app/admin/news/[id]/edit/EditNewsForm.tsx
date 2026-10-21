@@ -30,7 +30,7 @@ export default function EditNewsForm({ initialData }: { initialData: any }) {
     
     const result = await updateNews(initialData.id, formData);
     
-    if (result.error) {
+    if ('error' in result && result.error) {
       alert(result.error);
       setIsSubmitting(false);
     } else {
@@ -55,7 +55,7 @@ export default function EditNewsForm({ initialData }: { initialData: any }) {
         formData.append('image', file);
         const res = await uploadEditorImage(formData);
         
-        if (res.url) {
+        if ('url' in res && res.url) {
           const quill = quillRef.current?.getEditor();
           if (quill) {
             const range = quill.getSelection(true);
@@ -66,7 +66,7 @@ export default function EditNewsForm({ initialData }: { initialData: any }) {
             quill.setSelection(range.index + 1);
           }
         } else {
-          alert('Lỗi tải ảnh lên: ' + res.error);
+          alert('Lỗi tải ảnh lên: ' + ('error' in res ? res.error : ''));
         }
       }
     };

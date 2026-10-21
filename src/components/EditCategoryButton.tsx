@@ -20,7 +20,7 @@ export default function EditCategoryButton({ category }: EditCategoryButtonProps
     const formData = new FormData(e.currentTarget);
     const res = await updateCategory(category.id, formData);
     setIsSubmitting(false);
-    if (res.error) {
+    if ('error' in res && res.error) {
       alert(res.error);
     } else {
       setIsOpen(false);
