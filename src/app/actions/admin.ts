@@ -1,10 +1,21 @@
 'use server'
+import { cookies } from 'next/headers';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { cleanHtmlImages } from '@/utils/formatHtml';
 
+async function requireAdmin() {
+  const cookieStore = await cookies();
+  if (cookieStore.get('admin_session')?.value !== 'true') {
+    return { error: 'Bạn cần đăng nhập admin.' };
+  }
+  return null;
+}
+
 // =================== CATEGORIES ===================
 export async function createCategory(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
@@ -21,6 +32,8 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(id: string, formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const slug = name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
@@ -43,6 +56,9 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -56,6 +72,8 @@ export async function deleteCategory(id: string) {
 
 // =================== SUB-CATEGORIES ===================
 export async function createSubCategory(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const category_id = formData.get('category_id') as string;
@@ -93,6 +111,9 @@ export async function createSubCategory(formData: FormData) {
 }
 
 export async function deleteSubCategory(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('sub_categories').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -106,6 +127,9 @@ export async function deleteSubCategory(id: string) {
 
 // =================== CONTACTS ===================
 export async function updateContactStatus(id: string, status: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('contacts').update({ status }).eq('id', id);
   if (error) return { error: error.message };
@@ -114,6 +138,9 @@ export async function updateContactStatus(id: string, status: string) {
 }
 
 export async function deleteContact(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('contacts').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -123,6 +150,8 @@ export async function deleteContact(id: string) {
 
 // =================== NEWS ===================
 export async function createNews(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const title = (formData.get('title') as string)?.trim();
   const excerpt = formData.get('excerpt') as string;
@@ -171,6 +200,8 @@ export async function createNews(formData: FormData) {
 }
 
 export async function updateNews(id: string, formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const title = (formData.get('title') as string)?.trim();
   const excerpt = formData.get('excerpt') as string;
@@ -213,6 +244,9 @@ export async function updateNews(id: string, formData: FormData) {
 }
 
 export async function deleteNews(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('news').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -226,6 +260,8 @@ export async function deleteNews(id: string) {
 
 // =================== PRODUCTS ===================
 export async function createProduct(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const rawSubCat = (formData.get('sub_category_id') as string)?.trim();
@@ -294,6 +330,9 @@ export async function createProduct(formData: FormData) {
   return { success: true };
 }
 export async function deleteProduct(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -307,6 +346,8 @@ export async function deleteProduct(id: string) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const name = (formData.get('name') as string)?.trim();
   const rawSubCat = (formData.get('sub_category_id') as string)?.trim();
@@ -425,6 +466,8 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function uploadEditorImage(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const image = formData.get('image') as File | null;
   
@@ -450,6 +493,9 @@ export async function uploadEditorImage(formData: FormData) {
 
 // =================== REVIEWS ===================
 export async function updateReviewStatus(id: string, is_approved: boolean) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('product_reviews').update({ is_approved }).eq('id', id);
   if (error) return { error: error.message };
@@ -459,6 +505,9 @@ export async function updateReviewStatus(id: string, is_approved: boolean) {
 }
 
 export async function deleteReview(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('product_reviews').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -469,6 +518,8 @@ export async function deleteReview(id: string) {
 
 // =================== FEATURED PROJECTS ===================
 export async function createFeaturedProject(formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const title = (formData.get('title') as string)?.trim();
   const location = (formData.get('location') as string)?.trim();
@@ -511,6 +562,8 @@ export async function createFeaturedProject(formData: FormData) {
 }
 
 export async function updateFeaturedProject(id: string, formData: FormData) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const supabase = createAdminClient();
   const title = (formData.get('title') as string)?.trim();
   const location = (formData.get('location') as string)?.trim();
@@ -547,6 +600,9 @@ export async function updateFeaturedProject(id: string, formData: FormData) {
 }
 
 export async function deleteFeaturedProject(id: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  if (!id) return { error: 'Thiếu mã bản ghi.' };
   const supabase = createAdminClient();
   const { error } = await supabase.from('featured_projects').delete().eq('id', id);
   if (error) return { error: error.message };
@@ -556,6 +612,10 @@ export async function deleteFeaturedProject(id: string) {
 }
 
 export async function toggleStatus(table: string, id: string, newStatus: string) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+  const allowedTables = ['categories', 'sub_categories', 'products', 'news', 'featured_projects'];
+  if (!allowedTables.includes(table) || !id) return { error: 'Yêu cầu không hợp lệ.' };
   const supabase = createAdminClient();
 
   if (newStatus === 'draft') {
