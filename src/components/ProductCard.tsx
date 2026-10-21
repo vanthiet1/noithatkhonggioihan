@@ -39,12 +39,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
       )}
 
-      <div className="relative w-[calc(100%+10px)] -mx-[5px] overflow-hidden bg-gray-50 flex items-center justify-center">
-        <Link href={`/danh-muc-san-pham/${product.slug}`} className="block w-full">
+      <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-50">
+        <Link href={`/danh-muc-san-pham/${product.slug}`} className="absolute inset-0 block">
           <img 
             src={product.image_url} 
             alt={product.name} 
-            className="w-full h-auto object-contain group-hover:scale-110 transition-transform duration-500" 
+            className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500" 
           />
         </Link>
       </div>
